@@ -73,7 +73,8 @@ return {
   grid = 16,
   loaded = false,
   started = false,
-  font = love.graphics.newFont('fonts/7.ttf', 7),
+  font = love.graphics.newFont('fonts/8.ttf', 8),
+  fontBig = love.graphics.newFont('fonts/16.ttf', 13),
   colors = colors(),
   loadImages = loadImages,
   mask = doMask,
@@ -82,5 +83,9 @@ return {
   getAngle = getAngle,
   currentWave = 0,
   currentScore = 0,
-  clock = 0
+  highScore = 0,
+  scoreTable = false,
+  clock = -1,
+  paused = false,
+  fullscreen = false
 }

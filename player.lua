@@ -43,7 +43,7 @@ local function updateMove()
     if stage.enemies[i].active and stage.enemies[i].seen then
       if stage.enemies[i].type == 'rabbit' and math.sqrt((stage.enemies[i].x - x) * (stage.enemies[i].x - x) + (stage.enemies[i].y - y) * (stage.enemies[i].y - y)) < stage.enemies[i].height / 2 + images.idle:getHeight() / 2 then
         stage.enemies[i].flags.caught = true
-        sound.playSfx('rabbit')
+        if not stg.gameOver then sound.playSfx('rabbit') end
       end
     end
   end
@@ -72,7 +72,7 @@ local function updateBullet(bullet)
     local size = images.bullet:getWidth() / 2
     for i = 1, #stage.enemies do
       if stage.enemies[i].active and stage.enemies[i].seen and stage.enemies[i].type ~= 'rabbit' then
-        if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].height / 2 + size then
+        if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].width / 2 + size then
           if stage.enemies[i].type == 'amikiri' then
             stage.enemies[i].flags.hit = true
             kill = true
@@ -124,7 +124,7 @@ local function updateShot()
 	local limit = interval
 	local max = limit
 	if not canShoot and not stg.gameOver then
-		if shotClock % interval == 0 and shotClock < limit then spawnBullet() end
+		if shotClock % interval == 0 and shotClock < limit and stg.clock > 20 then spawnBullet() end
 		shotClock = shotClock + 1
   end
 	if shotClock >= max then canShoot = true end
@@ -136,19 +136,28 @@ local function getHit(bullet, isEnemy)
     stage.killBullets = true
     if not isEnemy then bullet.active = false end
     explosion.spawn({x = x, y = y, big = true})
+    sound.playSfx('playerhit')
     if lives > 0 then
       lives = lives - 1
       player.invulnerableClock = invulnerableLimit
       x = initX
       y = initY
-    else stg.gameOver = true end
+    else
+      sound.playSfx('gameover')
+      stg.gameOver = true
+    end
   end
 end
+
+local lastRollover = 0
 
 local function update()
   if not stg.gameOver and player.invulnerableClock < invulnerableLimit - 20 then updateMove() end
   updateShot()
   if player.invulnerableClock > 0 then player.invulnerableClock = player.invulnerableClock - 1 end
+  local extraCount = stg.currentScore % 60000
+  if extraCount < lastRollover then lives = lives + 1 end
+  lastRollover = extraCount
   player.lives = lives
 end
 

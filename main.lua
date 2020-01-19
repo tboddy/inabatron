@@ -1,3 +1,4 @@
+bitser = require 'bitser'
 stg = require '_stg'
 controls = require 'controls'
 sound = require 'sound'
@@ -24,6 +25,18 @@ function loadGame()
   if not stg.started then stg.started = true end
 end
 
+local function loadScore()
+	print('loading score')
+	local scoreData = love.filesystem.read('score.lua')
+	if scoreData then
+		stg.scoreTable = bitser.loads(scoreData)
+		table.sort(stg.scoreTable, function(a, b)
+		 return a > b
+		end)
+		if(stg.scoreTable[1]) then stg.highScore = stg.scoreTable[1] end
+	else stg.scoreTable = {} end
+end
+
 function love.load()
 	math.randomseed(3221)
   love.window.setTitle('INABATRON: 1984')
@@ -31,21 +44,30 @@ function love.load()
 	container:setFilter('nearest', 'nearest')
 	love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
 	love.graphics.setFont(stg.font)
+	loadScore()
 	controls.load()
   sound.load()
   if stg.started then loadGame()
   else start.load() end
 end
 
+local pausing = false
+
 function love.update()
-	if controls.quit() then love.event.quit()
-	elseif controls.reload() then love.event.quit('restart') end
   if stg.started then
+		if controls.quit() and not pausing then
+			if stg.gameOver then love.event.quit('restart') end
+			if stg.paused then stg.paused = false else stg.paused = true end
+			pausing = true
+		elseif not controls.quit() then pausing = false end
+		if controls.reload() then love.event.quit('restart') end
 		controls.update()
-		player.update()
-		stage.update()
-		level.update()
-		explosion.update()
+		if not stg.paused then
+			player.update()
+			stage.update()
+			level.update()
+			explosion.update()
+		end
 	  chrome.update()
 		stg.clock = stg.clock + 1
   else start.update() end
@@ -62,7 +84,10 @@ function love.draw()
 	  chrome.draw()
   else start.draw() end
 	love.graphics.setCanvas()
-	love.graphics.draw(container, 0, 0, 0, stg.scale, stg.scale)
+	local windowX = 0
+	local fullscreenWidth, fullscreenHeight = love.window.getDesktopDimensions()
+	if stg.fullscreen then windowX = fullscreenWidth / 2 - stg.width / 2 * stg.scale end
+	love.graphics.draw(container, windowX, 0, 0, stg.scale, stg.scale)
 end
 
 function love.run()

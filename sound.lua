@@ -1,17 +1,18 @@
 local currentSound, sfxTypes, bgmTypes
 
 local function load()
-  sfxTypes = {'playershot', 'explosion1', 'explosion2', 'rabbit', 'lostrabbit', 'bullet1', 'bullet2', 'bullet3'}
-  -- bgmTypes = {'title', 'level1', 'level2', 'boss1', 'boss2'}
+  sfxTypes = {'playershot', 'explosion1', 'explosion2', 'rabbit', 'lostrabbit', 'bullet1', 'bullet2', 'bullet3', 'playerhit', 'clearwave', 'menuchange', 'start', 'gameover'}
+  bgmTypes = {'stage', 'start'}
   for i = 1, #sfxTypes do
     sound.sfxFiles[sfxTypes[i]] = love.audio.newSource('sfx/' .. sfxTypes[i] .. '.wav', 'static')
     sound.sfxFiles[sfxTypes[i]]:setVolume(sound.sfxVolume)
   end
-  -- for i = 1, #bgmTypes do
-  --   sound.bgmFiles[bgmTypes[i]] = love.audio.newSource('bgm/' .. bgmTypes[i] .. '.mp3', 'static')
-	-- 	sound.bgmFiles[bgmTypes[i]]:setVolume(sound.bgmVolume)
-	-- 	sound.bgmFiles[bgmTypes[i]]:setLooping(true)
-  -- end
+  sound.sfxFiles.playershot:setVolume(sound.sfxVolume / 4)
+  for i = 1, #bgmTypes do
+    sound.bgmFiles[bgmTypes[i]] = love.audio.newSource('bgm/' .. bgmTypes[i] .. '.ogg', 'static')
+		sound.bgmFiles[bgmTypes[i]]:setVolume(sound.bgmVolume)
+		sound.bgmFiles[bgmTypes[i]]:setLooping(true)
+  end
 end
 
 local function playSfx(sfx)
@@ -19,6 +20,12 @@ local function playSfx(sfx)
   sound.sfxFiles[sfx]:play()
 end
 
+local function playBgm(bgm)
+  for i = 1, #bgmTypes do
+    if sound.bgmFiles[bgmTypes[i]]:isPlaying() then sound.bgmFiles[bgmTypes[i]]:stop() end
+  end
+  sound.bgmFiles[bgm]:play()
+end
 
 return {
   load = load,
@@ -26,7 +33,8 @@ return {
   bgmFiles = {},
   sfx = false,
   bgm = false,
-	sfxVolume = 0,
+	sfxVolume = 1,
 	bgmVolume = 1,
-  playSfx = playSfx
+  playSfx = playSfx,
+  playBgm = playBgm
 }

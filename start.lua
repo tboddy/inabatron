@@ -1,4 +1,4 @@
-local images, menuItems, currentMenuItem, movingMenu
+local images, menuItems, currentMenuItem, movingMenu, configShowing, currentConfigItem, configItems, selecting
 
 local function load()
   images = {
@@ -12,24 +12,64 @@ local function load()
   }
   stg.loadImages(images)
   menuItems = {'START', 'CONFIG', 'EXIT'}
+  configItems = {'WINDOW', 'FULLSCREEN', 'BACK'}
   currentMenuItem = 1
+  currentConfigItem = 1
   movingMenu = false
+  selecting = false
+  sound.playBgm('start')
+  configShowing = false
 end
 
 local function update()
-  if controls.up() and not movingMenu then
-    currentMenuItem = currentMenuItem - 1
+  if (controls.up() or controls.w()) and not movingMenu then
+    if configShowing then currentConfigItem = currentConfigItem - 1
+    else currentMenuItem = currentMenuItem - 1 end
     movingMenu = true
-  elseif controls.down() and not movingMenu then
-    currentMenuItem = currentMenuItem + 1
+    sound.playSfx('menuchange')
+  elseif (controls.down() or controls.s()) and not movingMenu then
+    if configShowing then currentConfigItem = currentConfigItem + 1
+    else currentMenuItem = currentMenuItem + 1 end
     movingMenu = true
-  elseif not controls.up() and not controls.down() then movingMenu = false end
+    sound.playSfx('menuchange')
+  elseif not (controls.up() or controls.w()) and not (controls.down() or controls.s()) then movingMenu = false end
+
   if currentMenuItem < 1 then currentMenuItem = #menuItems
   elseif currentMenuItem > #menuItems then currentMenuItem = 1 end
-  if controls.shot() then
-    if currentMenuItem == 1 then loadGame()
-    elseif currentMenuItem == 3 then love.event.quit() end
-  end
+
+  if currentConfigItem < 1 then currentConfigItem = #configItems
+  elseif currentConfigItem > #configItems then currentConfigItem = 1 end
+
+  if controls.shot() and not selecting then
+    selecting = true
+    if configShowing then
+
+      if currentConfigItem == 1 and stg.fullscreen then
+        stg.scale = 3
+        love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
+      	love.window.setFullscreen(false, 'desktop')
+        stg.fullscreen = false
+      elseif currentConfigItem == 2 and not stg.fullscreen then
+        local fullscreenWidth, fullscreenHeight = love.window.getDesktopDimensions()
+        stg.scale = fullscreenHeight / stg.height
+        love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
+      	love.window.setFullscreen(true, 'desktop')
+        stg.fullscreen = true
+      elseif currentConfigItem == 3 then
+        configShowing = false
+      end
+    else
+      if currentMenuItem == 1 then
+        loadGame()
+        sound.playBgm('stage')
+        sound.playSfx('start')
+      elseif currentMenuItem == 2 then
+        configShowing = true
+        currentConfigItem = 1
+      elseif currentMenuItem == 3 then love.event.quit() end
+    end
+
+  elseif not controls.shot() then selecting = false end
 end
 
 local function drawBorder()
@@ -70,7 +110,7 @@ local function drawTitle()
 end
 
 local function drawCredits()
-  local y = stg.grid * 11
+  local y = stg.grid * 11 + 2
   chrome.drawLabel({input = '2020 T. BODDY', y = y, align = {type = 'center'}})
 end
 
@@ -91,7 +131,7 @@ end
 
 local function drawMenu()
   local x = stg.width / 2 - 8 * 3
-  local y = stg.height / 2 + 4
+  local y = stg.height / 2 - 2
   local activeX = x - 10
   for i = 1, #menuItems do
     chrome.drawLabel({input = menuItems[i], x = x, y = y})
@@ -103,12 +143,33 @@ local function drawMenu()
   end
 end
 
+local function drawConfig()
+  local x = stg.width / 2 - 8 * 5
+  local y = stg.height / 2 - 2
+  local activeX = x - 10
+  for i = 1, #configItems do
+    chrome.drawLabel({input = configItems[i], x = x, y = y})
+    if i == currentConfigItem then
+      drawArrow(activeX, y, true)
+      drawArrow(activeX, y)
+    end
+    y = y + 12
+  end
+end
+
+local function drawScore()
+  local y = stg.grid * 11 + 2 - 12
+  chrome.drawLabel({input = 'HIGH SCORE:' .. chrome.processScore(stg.highScore), y = y, align = {type = 'center'}})
+end
+
 local function draw()
   love.graphics.draw(images.bg, 0, 0)
   drawBorder()
   drawTitle()
   drawCredits()
-  drawMenu()
+  if configShowing then drawConfig()
+  else drawMenu() end
+  drawScore()
 end
 
 return {

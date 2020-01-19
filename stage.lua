@@ -100,7 +100,7 @@ local function spawnGrunt()
     place(enemy)
     enemy.flags.targetOffset = stg.grid * 6
     enemy.angle = 0
-    enemy.speed = .5
+    enemy.speed = .35
     enemy.health = 1
     enemy.score = 100
     enemy.type = 'wani'
@@ -139,7 +139,7 @@ local function spawnHulk()
         angle = stg.getAngle(enemy, stage.enemies[i]) - mod + mod * 2 * math.random()
         if math.sqrt((stage.enemies[i].x - enemy.x) * (stage.enemies[i].x - enemy.x) + (stage.enemies[i].y - enemy.y) * (stage.enemies[i].y - enemy.y)) < enemy.height / 2 then
           stage.enemies[i].active = false
-          sound.playSfx('lostrabbit')
+          if not stg.gameOver then sound.playSfx('lostrabbit') end
         end
       end
       if angle then
@@ -166,7 +166,7 @@ local function spawnSpheroid(timeOffset)
       end)
       angle = angle + math.tau / count
     end
-    sound.playSfx('bullet1')
+    if not stg.gameOver then sound.playSfx('bullet1') end
   end
   spawnEnemy(function(enemy)
     enemy.type = 'oonamazu'
@@ -193,7 +193,7 @@ local function spawnBrain(timeOffset)
         bullet.x = enemy.flags.pos.x
         bullet.y = enemy.flags.pos.y
         bullet.angle = angle
-        bullet.speed = 1.25
+        bullet.speed = 1.2
         bullet.type = 'pill'
       end)
       angle = angle + mod
@@ -221,12 +221,12 @@ local function spawnBrain(timeOffset)
     bounce(enemy)
     local start = enemy.flags.timeOffset * 30
     local interval = 180
-    local limit = 30
+    local limit = 20
     local bInterval = 10
     if enemy.clock % interval == start then
       enemy.flags.pos = {x = enemy.x, y = enemy.y}
       enemy.flags.bulletAngle = stg.getAngle(enemy.flags.pos, player)
-      sound.playSfx('bullet2')
+      if not stg.gameOver then sound.playSfx('bullet2') end
     end
     if enemy.clock % interval >= start and enemy.clock % bInterval == 0 and enemy.clock % interval < start + limit then
       spawnBullets(enemy)
@@ -238,7 +238,7 @@ local function spawnTank(timeOffset)
   local function spawnBullets(enemy)
     local count = 3
     local angle = math.tau * math.random()
-    sound.playSfx('bullet3')
+    if not stg.gameOver then sound.playSfx('bullet3') end
     for i = 1, count do
       stage.spawnBullet(function(bullet)
         bullet.x = enemy.x
@@ -354,7 +354,7 @@ local function updateEnemy(enemy)
 end
 
 local function spawnBullet(initFunc, updateFunc)
-	if killBulletClock == 0 then
+	if killBulletClock == 0 and not stg.gameOver then
 	  local bullet = bullets[stg.getIndex(bullets)]
 	  bullet.active = true
 		bullet.rotation = 0
@@ -461,5 +461,7 @@ return {
   spawnBrain = spawnBrain,
   spawnTank = spawnTank,
   killEnemies = false,
-  inter = true
+  inter = true,
+  waveLimit = 80,
+  waveClock = 0
 }

@@ -1,4 +1,4 @@
-local images, offset
+local images, offset, savedScore, gameOverClock
 
 local function load()
   images = {
@@ -7,9 +7,26 @@ local function load()
   }
   stg.loadImages(images)
   offset = 4
+  savedScore = false
+  gameOverClock = 0
 end
 
-local function update() end
+local function saveScore()
+  print('save score')
+  table.insert(stg.scoreTable, stg.currentScore)
+	local scoreStr = bitser.dumps(stg.scoreTable)
+	love.filesystem.write('score.lua', scoreStr)
+  savedScore = true
+end
+
+local function update()
+  -- if stg.gameOver
+  if stg.currentScore >= stg.highScore then
+    stg.highScore = stg.currentScore
+    if stg.gameOver and not savedScore then saveScore() end
+  end
+  if stg.gameOver then gameOverClock = gameOverClock + 1 end
+end
 
 local function processScore(input)
   local score = tostring(input)
@@ -40,33 +57,78 @@ local function drawLabel(opts)
 end
 
 local function drawLives()
-  local x = stg.width - offset - images.heart:getWidth() - 16 - 2
+  local x = stg.width - offset - images.heart:getWidth() - 16
+  local y = offset + 4
   love.graphics.setColor(stg.colors.black)
-  love.graphics.draw(images.heart, x + 1, offset + 1)
+  love.graphics.draw(images.heart, x + 1, y + 1)
   love.graphics.setColor(stg.colors.redLight)
-  love.graphics.draw(images.heart, x, offset)
+  love.graphics.draw(images.heart, x, y)
   love.graphics.setColor(stg.colors.red)
-  love.graphics.draw(images.heartShadow, x, offset)
+  love.graphics.draw(images.heartShadow, x, y)
   love.graphics.setColor(stg.colors.white)
-  drawLabel({input = 'x' .. player.lives, x = x + 10, y = offset})
+  love.graphics.setFont(stg.fontBig)
+  drawLabel({input = 'x' .. player.lives, x = x + 8, y = offset - 3})
+  love.graphics.setFont(stg.font)
+end
+
+local function drawWaveBg()
+  love.graphics.setColor(stg.colors.black)
+  local interval = stage.waveLimit / 8
+  if stg.clock < interval * 2 then love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end
+  if stage.waveClock < interval then stg.mask('quarter', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end)
+  elseif stage.waveClock >= interval and stage.waveClock < interval * 2 then stg.mask('half', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end)
+  elseif stage.waveClock >= interval * 2 and stage.waveClock < interval * 6 then love.graphics.rectangle('fill', 0, 0, stg.width, stg.height)
+  elseif stage.waveClock >= interval * 6 and stage.waveClock < interval * 7 then stg.mask('half', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end)
+  elseif stage.waveClock >= interval * 7 then stg.mask('quarter', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end) end
+  love.graphics.setColor(stg.colors.white)
 end
 
 local function drawWave()
-  local y = stg.height - 7 - offset; if stage.inter then y = stg.height / 2 - 4 end
+  local y = stg.height - 7 - offset; if stage.inter then y = stg.height / 2 - 8 end
+  if stage.inter then love.graphics.setFont(stg.fontBig) end
   drawLabel({input = 'WAVE ' .. stg.currentWave, y = y, align = {type = 'center'}})
+  if stage.inter then love.graphics.setFont(stg.font) end
 end
 
 local function drawGameOver()
-  drawLabel({input = 'GAME OVER', y = stg.height / 2 - 4, align = {type = 'center'}})
+  love.graphics.setColor(stg.colors.black)
+  local interval = stage.waveLimit / 8
+  love.graphics.setColor(stg.colors.black)
+  if gameOverClock < interval then stg.mask('quarter', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end)
+  elseif gameOverClock >= interval and gameOverClock < interval * 2 then stg.mask('half', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end)
+  elseif gameOverClock >= interval * 2 then love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end
+  stg.mask('half', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end)
+  love.graphics.setColor(stg.colors.white)
+  local y = stg.height / 2 - 12
+  love.graphics.setFont(stg.fontBig)
+  drawLabel({input = 'GAME OVER', y = y - 17, align = {type = 'center'}})
+  love.graphics.setFont(stg.font)
+  drawLabel({input = 'YOUR SCORE:' .. processScore(stg.currentScore), y = y + 6, align = {type = 'center'}})
+  if stg.currentScore >= stg.highScore then drawLabel({input = 'NEW HIGH SCORE!', y = y + 17, align = {type = 'center'}})
+  else drawLabel({input = 'HIGH SCORE:' .. processScore(stg.highScore), y = y + 17, align = {type = 'center'}}) end
+  drawLabel({input = 'PRESS PAUSE TO RESTART', y = y + 17 + 16, align = {type = 'center'}})
+end
+
+local function drawPaused()
+  love.graphics.setColor(stg.colors.black)
+  stg.mask('half', function() love.graphics.rectangle('fill', 0, 0, stg.width, stg.height) end)
+  love.graphics.setColor(stg.colors.white)
+  love.graphics.setFont(stg.fontBig)
+  drawLabel({input = 'PAUSED', y = stg.height / 2 - 8, align = {type = 'center'}})
+  love.graphics.setFont(stg.font)
 end
 
 local function draw()
   if stg.gameOver then
     drawGameOver()
   else
-    drawLabel({input = processScore(stg.currentScore), x = offset, y = offset})
+    if stg.currentWave > 0 and stage.inter then drawWaveBg() end
+    if stg.paused then drawPaused() end
+    love.graphics.setFont(stg.fontBig)
+    drawLabel({input = processScore(stg.currentScore), x = offset, y = offset - 3})
+    love.graphics.setFont(stg.font)
     drawLives()
-    if stg.currentWave > 0 then drawWave() end
+    if stg.currentWave > 0 and not stg.paused then drawWave() end
   end
 end
 
@@ -74,5 +136,6 @@ return {
   load = load,
   update = update,
   draw = draw,
-  drawLabel = drawLabel
+  drawLabel = drawLabel,
+  processScore = processScore
 }

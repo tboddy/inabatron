@@ -26,28 +26,25 @@ local function load()
 end
 
 local function shot()
-  return love.keyboard.isDown('z') or (joystick and joystick:isDown(1))
+  return love.keyboard.isDown('z') or (joystick and (joystick:isDown(1) or joystick:isDown(2)))
 end
 
 local function focus()
-  return love.keyboard.isDown('lshift') or love.keyboard.isDown('rshift') or (joystick and joystick:isDown(2))
+  return love.keyboard.isDown('lshift') or love.keyboard.isDown('rshift') or (joystick and (joystick:isDown(3) or joystick:isDown(4)))
 end
 
 local function update()
-  -- if joystick then
-  --   local axis1, axis2, axis3, axis4, axis5 = joystick:getAxes(joystick)
-  --   local rightX = math.floor(axis4 * 10)
-  --   local rightY = math.floor(axis5 * 10)
-  --   print(rightX, rightY)
-  -- end
+  if joystick then
+    -- print(joystick:isDown(7))
+  end
 end
 
 local function reload()
-  return love.keyboard.isDown('r')
+  return love.keyboard.isDown('r') or (joystick and joystick:isDown(7))
 end
 
 local function quit()
-  return love.keyboard.isDown('escape')
+  return love.keyboard.isDown('escape') or (joystick and joystick:isDown(8))
 end
 
 return {

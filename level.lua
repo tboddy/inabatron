@@ -1,5 +1,3 @@
-local waveClock = 0
-local waveLimit = 60
 local spawnClock = 0
 local spawnLimit = 30
 local increasedWave = false
@@ -329,32 +327,33 @@ function waveFourty() -- brain wave
   for i = 1, 25 do stage.spawnBrain(i % 3) end
   stage.spawnSpheroid(1)
   stage.spawnTank(2)
-  nextWave = waveTwentyOne
   for i = 1, 30 do stage.spawnRabbit() end
+  nextWave = waveTwentyOne
 end
 
 local currentWave = waveOne
 
 local function update()
   if stage.rabbitCount == 0 then
-    if waveClock >= waveLimit then
+    if stage.waveClock >= stage.waveLimit then
       stage.inter = false
       if spawnClock >= spawnLimit and not stg.gameOver then
         currentWave()
         currentWave = nextWave
         increasedWave = false
-        waveClock = 0
+        stage.waveClock = 0
       end
       spawnClock = spawnClock + 1
     else
       spawnClock = 0
-      waveClock = waveClock + 1
+      stage.waveClock = stage.waveClock + 1
       stage.killEnemies = true
       stage.inter = true
       stage.killBullets = true
       if not increasedWave then
         stg.currentWave = stg.currentWave + 1
         increasedWave = true
+        if stg.currentWave > 1 then sound.playSfx('clearwave') end
         if stg.currentWave >= 256 then love.event.quit() end
       end
     end
