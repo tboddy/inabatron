@@ -29,17 +29,16 @@ local function loadScore()
 	print('loading score')
 	local scoreData = love.filesystem.read('score.lua')
 	if scoreData then
-		stg.scoreTable = bitser.loads(scoreData)
-		table.sort(stg.scoreTable, function(a, b)
-		 return a > b
-		end)
-		if(stg.scoreTable[1]) then stg.highScore = stg.scoreTable[1] end
-	else stg.scoreTable = {} end
+		stg.saveTable = bitser.loads(scoreData)
+		if stg.saveTable.score then stg.highScore = stg.saveTable.score end
+		if stg.saveTable.fullscreen and (stg.saveTable.fullscreen == true or stg.saveTable.fullscreen == 'true') then stg.doFullscreen() end
+	else stg.saveTable = {} end
 end
 
 function love.load()
 	math.randomseed(3221)
-  love.window.setTitle('INABATRON: 1984')
+  love.window.setTitle('INABATRON: 2084')
+	love.filesystem.setIdentity('inabatron')
 	container = love.graphics.newCanvas(stg.width, stg.height)
 	container:setFilter('nearest', 'nearest')
 	love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
@@ -63,11 +62,13 @@ function love.update()
 		if controls.reload() then love.event.quit('restart') end
 		controls.update()
 		if not stg.paused then
+			background.update()
 			player.update()
 			stage.update()
 			level.update()
 			explosion.update()
 		end
+		if stg.gameOver and (controls.shot() or controls.focus()) then love.event.quit('restart') end
 	  chrome.update()
 		stg.clock = stg.clock + 1
   else start.update() end

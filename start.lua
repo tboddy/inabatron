@@ -8,7 +8,9 @@ local function load()
     title = love.graphics.newImage('img/start/title.png'),
     subTitle = love.graphics.newImage('img/start/subtitle.png'),
     peace = love.graphics.newImage('img/start/peace.png'),
-    yin = love.graphics.newImage('img/start/yin.png')
+    yin = love.graphics.newImage('img/start/yin.png'),
+    banner = love.graphics.newImage('img/start/banner.png'),
+    bannershadow = love.graphics.newImage('img/start/bannershadow.png')
   }
   stg.loadImages(images)
   menuItems = {'START', 'CONFIG', 'EXIT'}
@@ -43,18 +45,19 @@ local function update()
   if controls.shot() and not selecting then
     selecting = true
     if configShowing then
-
       if currentConfigItem == 1 and stg.fullscreen then
         stg.scale = 3
         love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
       	love.window.setFullscreen(false, 'desktop')
         stg.fullscreen = false
+        stg.saveTable.fullscreen = false
+        local saveStr = bitser.dumps(stg.saveTable)
+        love.filesystem.write('score.lua', saveStr)
       elseif currentConfigItem == 2 and not stg.fullscreen then
-        local fullscreenWidth, fullscreenHeight = love.window.getDesktopDimensions()
-        stg.scale = fullscreenHeight / stg.height
-        love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
-      	love.window.setFullscreen(true, 'desktop')
-        stg.fullscreen = true
+        stg.doFullscreen()
+        stg.saveTable.fullscreen = true
+        local saveStr = bitser.dumps(stg.saveTable)
+        love.filesystem.write('score.lua', saveStr)
       elseif currentConfigItem == 3 then
         configShowing = false
       end
@@ -107,6 +110,10 @@ local function drawTitle()
   love.graphics.draw(images.title, x, y)
   love.graphics.draw(images.subTitle, subX, subY)
   love.graphics.setColor(stg.colors.white)
+  x = stg.width / 2 - images.banner:getWidth() / 2 - 2
+  y = y + stg.grid * 1.5 + 5
+  love.graphics.draw(images.bannershadow, x + 11, y - 3)
+  love.graphics.draw(images.banner, x, y)
 end
 
 local function drawCredits()
@@ -131,7 +138,7 @@ end
 
 local function drawMenu()
   local x = stg.width / 2 - 8 * 3
-  local y = stg.height / 2 - 2
+  local y = stg.height / 2
   local activeX = x - 10
   for i = 1, #menuItems do
     chrome.drawLabel({input = menuItems[i], x = x, y = y})
@@ -145,7 +152,7 @@ end
 
 local function drawConfig()
   local x = stg.width / 2 - 8 * 5
-  local y = stg.height / 2 - 2
+  local y = stg.height / 2
   local activeX = x - 10
   for i = 1, #configItems do
     chrome.drawLabel({input = configItems[i], x = x, y = y})

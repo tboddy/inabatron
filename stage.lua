@@ -462,6 +462,6 @@ return {
   spawnTank = spawnTank,
   killEnemies = false,
   inter = true,
-  waveLimit = 80,
+  waveLimit = 90,
   waveClock = 0
 }

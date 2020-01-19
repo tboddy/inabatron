@@ -331,6 +331,58 @@ function waveFourty() -- brain wave
   nextWave = waveTwentyOne
 end
 
+local waveTitles = {
+
+  false,
+  false,
+  false,
+  false,
+  'APPOSSHA WAVE',
+
+  false,
+  'AKKOROKAMUI WAVE',
+  false,
+  'WANI MOB',
+  'APPOSSHA WAVE',
+
+  false,
+  'AKKOROKAMUI WAVE',
+  false,
+  false,
+  'APPOSSHA WAVE',
+
+  false,
+  'AKKOROKAMUI WAVE',
+  false,
+  'WANI MOB',
+  'APPOSSHA WAVE',
+
+  false,
+  'AKKOROKAMUI WAVE',
+  false,
+  false,
+  'APPOSSHA WAVE',
+
+  false,
+  'AKKOROKAMUI WAVE',
+  false,
+  'WANI MOB',
+  'APPOSSHA WAVE',
+
+  false,
+  'AKKOROKAMUI WAVE',
+  false,
+  false,
+  'APPOSSHA WAVE',
+
+  false,
+  'AKKOROKAMUI WAVE',
+  false,
+  'WANI MOB',
+  'APPOSSHA WAVE'
+
+}
+
 local currentWave = waveOne
 
 local function update()
@@ -339,6 +391,7 @@ local function update()
       stage.inter = false
       if spawnClock >= spawnLimit and not stg.gameOver then
         currentWave()
+        stg.waveTitle = false
         currentWave = nextWave
         increasedWave = false
         stage.waveClock = 0
@@ -352,6 +405,9 @@ local function update()
       stage.killBullets = true
       if not increasedWave then
         stg.currentWave = stg.currentWave + 1
+        stg.currentWaveTitle = stg.currentWaveTitle + 1
+        if stg.currentWave >= 41 then stg.currentWaveTitle = 21 end
+        if waveTitles[stg.currentWave] then stg.waveTitle = waveTitles[stg.currentWave] end
         increasedWave = true
         if stg.currentWave > 1 then sound.playSfx('clearwave') end
         if stg.currentWave >= 256 then love.event.quit() end

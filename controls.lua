@@ -26,7 +26,7 @@ local function load()
 end
 
 local function shot()
-  return love.keyboard.isDown('z') or (joystick and (joystick:isDown(1) or joystick:isDown(2)))
+  return love.keyboard.isDown('z') or love.keyboard.isDown('return') or (joystick and (joystick:isDown(1) or joystick:isDown(2)))
 end
 
 local function focus()
@@ -34,9 +34,9 @@ local function focus()
 end
 
 local function update()
-  if joystick then
+  -- if joystick then
     -- print(joystick:isDown(7))
-  end
+  -- end
 end
 
 local function reload()

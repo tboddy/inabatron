@@ -66,6 +66,14 @@ local function getAngle(a, b)
   return math.atan2(b.y - a.y, b.x - a.x)
 end
 
+local function doFullscreen()
+  local fullscreenWidth, fullscreenHeight = love.window.getDesktopDimensions()
+  stg.scale = fullscreenHeight / stg.height
+  love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
+  love.window.setFullscreen(true, 'desktop')
+  stg.fullscreen = true
+end
+
 return {
   scale = 3,
   width = 320,
@@ -83,9 +91,12 @@ return {
   getAngle = getAngle,
   currentWave = 0,
   currentScore = 0,
+  currentWaveTitle = 0,
+  waveTitle = false,
   highScore = 0,
-  scoreTable = false,
+  saveTable = false,
   clock = -1,
   paused = false,
-  fullscreen = false
+  fullscreen = false,
+  doFullscreen = doFullscreen
 }

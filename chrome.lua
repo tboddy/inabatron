@@ -12,10 +12,9 @@ local function load()
 end
 
 local function saveScore()
-  print('save score')
-  table.insert(stg.scoreTable, stg.currentScore)
-	local scoreStr = bitser.dumps(stg.scoreTable)
-	love.filesystem.write('score.lua', scoreStr)
+  stg.saveTable.score = stg.currentScore
+	local saveStr = bitser.dumps(stg.saveTable)
+	love.filesystem.write('score.lua', saveStr)
   savedScore = true
 end
 
@@ -25,7 +24,9 @@ local function update()
     stg.highScore = stg.currentScore
     if stg.gameOver and not savedScore then saveScore() end
   end
-  if stg.gameOver then gameOverClock = gameOverClock + 1 end
+  if stg.gameOver then
+    gameOverClock = gameOverClock + 1
+  end
 end
 
 local function processScore(input)
@@ -86,6 +87,12 @@ end
 local function drawWave()
   local y = stg.height - 7 - offset; if stage.inter then y = stg.height / 2 - 8 end
   if stage.inter then love.graphics.setFont(stg.fontBig) end
+
+  if stg.waveTitle and stage.inter then
+    drawLabel({input = stg.waveTitle, y = y - 12, align = {type = 'center'}})
+    y = y + 5
+  end
+
   drawLabel({input = 'WAVE ' .. stg.currentWave, y = y, align = {type = 'center'}})
   if stage.inter then love.graphics.setFont(stg.font) end
 end
